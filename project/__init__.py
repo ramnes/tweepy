@@ -9,8 +9,8 @@ app.config.from_pyfile('_config.py')
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 
-from project.users.views import users_blueprint
-from project.tweets.views import tweets_blueprint
+from project.users.views import users_blueprint  # noqa
+from project.tweets.views import tweets_blueprint  # noqa
 
 # registering blueprints
 app.register_blueprint(users_blueprint)
@@ -30,7 +30,7 @@ def not_found(e):
 
 
 # cannot test this in development
-@app.errorhandler(500) # pragma: no cover
+@app.errorhandler(500)  # pragma: no cover
 def internal_error(e):
     db.session.rollback()
     if app.debug is not True:

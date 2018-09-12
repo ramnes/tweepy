@@ -2,7 +2,7 @@
 import datetime
 from functools import wraps
 from flask import (flash, redirect, render_template,
-    request, session, url_for, Blueprint)
+                   request, session, url_for, Blueprint)
 from sqlalchemy.exc import IntegrityError
 
 from .forms import PostTweetForm
@@ -12,8 +12,8 @@ from project.models import User, Tweet, Follower
 # config
 tweets_blueprint = Blueprint('tweets', __name__)
 
-# helper functions
 
+# helper functions
 def login_required(test):
     @wraps(test)
     def wrap(*args, **kwargs):
@@ -24,12 +24,14 @@ def login_required(test):
             return (redirect(url_for('users.login')))
     return wrap
 
+
 def filtered_tweets(user_id):
     who_id = user_id
     whom_ids = db.session.query(Follower.whom_id).filter_by(who_id=who_id)
     user_tweets = db.session.query(Tweet).filter_by(user_id=who_id)
     if whom_ids.all():
-        follower_tweets = db.session.query(Tweet).filter(Tweet.user_id.in_(whom_ids))
+        follower_tweets = db.session.query(Tweet)
+        follower_tweets = follower_tweets.filter(Tweet.user_id.in_(whom_ids))
         result = user_tweets.union(follower_tweets)
         return result.order_by(Tweet.posted.desc())
     else:
@@ -37,7 +39,6 @@ def filtered_tweets(user_id):
 
 
 # routes
-
 @tweets_blueprint.route('/tweets/')
 @login_required
 def tweet():
@@ -46,6 +47,7 @@ def tweet():
         form=PostTweetForm(),
         all_tweets=filtered_tweets(session['user_id']),
     )
+
 
 @tweets_blueprint.route('/tweets/post/', methods=['GET', 'POST'])
 @login_required
@@ -70,6 +72,7 @@ def post_tweet():
         all_tweets=filtered_tweets(session['user_id']),
     )
 
+
 @tweets_blueprint.route('/tweets/delete/<int:tweet_id>/')
 @login_required
 def delete_tweet(tweet_id):
@@ -87,6 +90,7 @@ def delete_tweet(tweet_id):
     else:
         flash('That tweet does not exists. Saw what you did there, Hacker!')
         return redirect(url_for('tweets.tweet'))
+
 
 @tweets_blueprint.route('/tweets/follow/<int:user_id>/')
 @login_required
@@ -108,11 +112,13 @@ def follow_user(user_id):
                 flash('You are already following {}'.format(whom))
                 return redirect(url_for('tweets.tweet'))
         else:
-            flash('No use following yourself. You will still see your tweets anyway. :)')
+            flash('No use following yourself. '
+                  'You will still see your tweets anyway. :)')
             return redirect(url_for('tweets.tweet'))
     except AttributeError:
         flash('That user does not exist.')
         return redirect(url_for('tweets.tweet'))
+
 
 @tweets_blueprint.route('/tweets/unfollow/<int:user_id>/')
 @login_required
@@ -132,7 +138,8 @@ def unfollow_user(user_id):
                 flash('You are not following {} to unfollow.'.format(whom))
                 return redirect(url_for('tweets.tweet'))
         else:
-            flash('No use unfollowing yourself. You will still see your tweets anyway. :)')
+            flash('No use unfollowing yourself.'
+                  'You will still see your tweets anyway. :)')
             return redirect(url_for('tweets.tweet'))
     except AttributeError:
         flash('That user does not exist.')

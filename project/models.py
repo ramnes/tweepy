@@ -19,14 +19,13 @@ class Tweet(db.Model):
     def __repr__(self):
         return '<Id {0} - {1}>'.format(self.tweet_id, self.tweet)
 
-
     @classmethod
     def delta_time(cls, tweet_posted):
         now = datetime.datetime.now()
         td = now - tweet_posted
         days = td.days
-        hours = td.seconds//3600
-        minutes = (td.seconds//60)%60
+        hours = td.seconds // 3600
+        minutes = (td.seconds // 60) % 60
         if days > 0:
             return tweet_posted.strftime("%d %B, %Y")
         elif hours > 0:
@@ -35,7 +34,6 @@ class Tweet(db.Model):
             return str(minutes) + 'm'
         else:
             return 'few seconds ago'
-
 
 
 class User(db.Model):
@@ -59,8 +57,8 @@ class User(db.Model):
 
     @classmethod
     def is_following(cls, who_id, whom_id):
-        whom_ids = db.session.query(Follower.whom_id).filter_by(who_id=who_id).all()
-        whom_ids = [i[0] for i in whom_ids]
+        whom_ids = db.session.query(Follower.whom_id).filter_by(who_id=who_id)
+        whom_ids = [i[0] for i in whom_ids.all()]
         if whom_id in whom_ids:
             return True
         else:
@@ -75,7 +73,6 @@ class Follower(db.Model):
 
     who_id = db.Column(db.Integer)
     whom_id = db.Column(db.Integer)
-
 
     def __init__(self, who_id, whom_id):
         self.who_id = who_id
