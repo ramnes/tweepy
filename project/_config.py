@@ -5,7 +5,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DEBUG = True
 
 DATABASE = 'database.db'
-WTF_CSRD_ENABLED = True
+WTF_CSRF_ENABLED = False
 
 # use something like os.urandom(24) for productional uses.
 SECRET_KEY = 'my precious'
