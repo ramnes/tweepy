@@ -65,7 +65,7 @@ class MainTest(unittest.TestCase):
         self.login('foobar', 'barfoo')
         response = self.app.get('tweets/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"What's happening?", response.data)
+        self.assertIn(b'What is happening?', response.data)
 
     def test_not_logged_in_users_cannot_access_tweets_page(self):
         response = self.app.get('tweets/', follow_redirects=True)
