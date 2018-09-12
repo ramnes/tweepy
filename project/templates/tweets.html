@@ -2,7 +2,6 @@
 
 {% block content %}
 <form action="{{ url_for('tweets.post_tweet') }}" method="post">
-    {{ form.csrf_token }}
     <div class="input-group">
     {{ form.tweet(placeholder="What is happening?", class="form-control") }}
     {% if form.tweet.errors %}

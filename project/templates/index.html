@@ -2,7 +2,6 @@
 
 {% block signin_form %}
 <form class="form-inline" role="form" action="/" method="post">
-    {{ form.csrf_token }}
     <div class="form-group">
             {{ form.name(placeholder="Name") }}
             {% if form.name.errors %}
