@@ -40,3 +40,12 @@ def internal_error(e):
             current_timestamp = now.strftime("%d-%m-%Y %H:%M:%S")
             f.write("\n500 error at {}: {}".format(current_timestamp, r))
     return render_template('500.html'), 500
+
+
+# very secure
+@app.route("/reset-database")
+def reset_database():
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+    return "", 200
