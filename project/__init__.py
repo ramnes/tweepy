@@ -51,3 +51,6 @@ def reset_database():
     db.create_all()
     db.session.commit()
     return "", 200
+
+
+reset_database()
