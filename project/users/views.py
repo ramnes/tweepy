@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .forms import RegisterForm, LoginForm
 from project import db, bcrypt
+from project.cache import cache
 from project.models import User
 
 # config
@@ -24,6 +25,16 @@ def login_required(test):
     return wrap
 
 
+@cache.memoize()
+def all_users():
+    return list(db.session.query(User).all())
+
+
+@cache.memoize()
+def user_by_name(name):
+    return User.query.filter_by(name=name).first()
+
+
 # routes
 @users_blueprint.route('/logout/')
 @login_required
@@ -33,27 +44,32 @@ def logout():
     session.pop('name', None)
     session.pop('role', None)
     flash('You have been logged out')
-    return redirect(url_for('users.login'))
+    return redirect(url_for('users.index'))
 
 
-@users_blueprint.route('/', methods=['GET', 'POST'])
+@users_blueprint.route('/', methods=['GET'])
+def index():
+    form = LoginForm(request.form)
+    return render_template('index.html', form=form, error=None)
+
+
+@users_blueprint.route('/', methods=['POST'])
 def login():
     error = None
     form = LoginForm(request.form)
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            user = User.query.filter_by(name=request.form['name']).first()
-            if (user is not None
-                and bcrypt.check_password_hash(user.password,
-                                               request.form['password'])):
-                session['logged_in'] = True
-                session['user_id'] = user.id
-                session['name'] = user.name
-                session['role'] = user.role
-                flash('Welcome')
-                return redirect(url_for('tweets.tweet'))
-            else:
-                error = 'Invalid username or password.'
+    if form.validate_on_submit():
+        user = user_by_name(request.form['name'])
+        if (user is not None
+            and bcrypt.check_password_hash(user.password,
+                                           request.form['password'])):
+            session['logged_in'] = True
+            session['user_id'] = user.id
+            session['name'] = user.name
+            session['role'] = user.role
+            flash('Welcome')
+            return redirect(url_for('tweets.tweet'))
+        else:
+            error = 'Invalid username or password.'
     return render_template('index.html', form=form, error=error)
 
 
@@ -73,6 +89,7 @@ def register():
             try:
                 db.session.add(new_user)
                 db.session.commit()
+                cache.delete_memoized(all_users)
                 flash('Thanks for registering. Plese login.')
                 return redirect(url_for('users.login'))
             except IntegrityError:
@@ -83,6 +100,5 @@ def register():
 
 @users_blueprint.route('/users/')
 @login_required
-def all_users():
-    users = db.session.query(User).all()
-    return render_template('users.html', users=users)
+def users():
+    return render_template('users.html', users=all_users())

@@ -3,11 +3,13 @@ import datetime
 from flask import Flask, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from .cache import cache
 
 app = Flask(__name__)
 app.config.from_pyfile('_config.py')
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
+cache.init_app(app)
 
 from project.users.views import users_blueprint  # noqa
 from project.tweets.views import tweets_blueprint  # noqa
