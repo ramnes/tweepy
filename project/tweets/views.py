@@ -3,10 +3,12 @@ import datetime
 from functools import wraps
 from flask import (flash, redirect, render_template,
                    request, session, url_for, Blueprint)
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 
 from .forms import PostTweetForm
 from project import db
+from project.cache import cache
 from project.models import User, Tweet, Follower
 
 # config
@@ -25,6 +27,7 @@ def login_required(test):
     return wrap
 
 
+@cache.memoize(timeout=10)
 def filtered_tweets(user_id):
     who_id = user_id
     whom_ids = db.session.query(Follower.whom_id).filter_by(who_id=who_id)
@@ -35,7 +38,8 @@ def filtered_tweets(user_id):
         result = user_tweets.union(follower_tweets)
     else:
         result = user_tweets
-    return result.order_by(Tweet.posted.desc()).limit(50)
+    result = result.order_by(Tweet.posted.desc()).limit(50)
+    return list(result.options(joinedload(Tweet.poster)))
 
 
 # routes
@@ -63,6 +67,7 @@ def post_tweet():
             )
             db.session.add(new_tweet)
             db.session.commit()
+            cache.delete_memoized(filtered_tweets)
             flash('New tweet has been posted.')
             return redirect(url_for('tweets.tweet'))
     return render_template(
@@ -82,6 +87,7 @@ def delete_tweet(tweet_id):
         if session['user_id'] == tweet.first().user_id:
             tweet.delete()
             db.session.commit()
+            cache.delete_memoized(filtered_tweets)
             flash('That tweet was deleted.')
             return redirect(url_for('tweets.tweet'))
         else:
@@ -106,6 +112,7 @@ def follow_user(user_id):
             try:
                 db.session.add(new_follow)
                 db.session.commit()
+                cache.delete_memoized(filtered_tweets, session['user_id'])
                 flash('You are now following {}'.format(whom))
                 return redirect(url_for('tweets.tweet'))
             except IntegrityError:
@@ -133,6 +140,7 @@ def unfollow_user(user_id):
                 following.delete()
                 db.session.commit()
                 flash('You are no more following {}'.format(whom))
+                cache.delete_memoized(filtered_tweets, session['user_id'])
                 return redirect(url_for('tweets.tweet'))
             else:
                 flash('You are not following {} to unfollow.'.format(whom))

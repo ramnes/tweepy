@@ -13,6 +13,7 @@ ecdsa==0.13               # via paramiko
 Fabric==1.11.1
 first==2.0.1              # via pip-tools
 Flask-Bcrypt==0.7.1
+Flask-Caching==1.4.0
 Flask-SQLAlchemy==2.1
 Flask-WTF==0.11
 Flask==0.11.1             # via flask-bcrypt, flask-sqlalchemy, flask-wtf

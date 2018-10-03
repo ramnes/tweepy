@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .forms import RegisterForm, LoginForm
 from project import db, bcrypt
+from project.cache import cache
 from project.models import User
 
 # config
@@ -22,6 +23,16 @@ def login_required(test):
             flash('You need to login first')
             return (redirect(url_for('users.ui_login')))
     return wrap
+
+
+@cache.memoize()
+def all_users():
+    return list(db.session.query(User).all())
+
+
+@cache.memoize()
+def user_by_name(name):
+    return User.query.filter_by(name=name).first()
 
 
 # routes
@@ -44,7 +55,7 @@ def index():
 
 def login(form):
     if form.validate_on_submit():
-        user = User.query.filter_by(name=form.name.data).first()
+        user = user_by_name(form.name.data)
         if (user is not None
             and bcrypt.check_password_hash(user.password, form.password.data)):
             session['logged_in'] = True
@@ -88,6 +99,7 @@ def register():
             try:
                 db.session.add(new_user)
                 db.session.commit()
+                cache.delete_memoized(all_users)
                 flash('Thanks for registering. Plese login.')
                 return redirect(url_for('users.ui_login'))
             except IntegrityError:
@@ -98,6 +110,5 @@ def register():
 
 @users_blueprint.route('/users/')
 @login_required
-def all_users():
-    users = db.session.query(User).all()
-    return render_template('users.html', users=users)
+def users():
+    return render_template('users.html', users=all_users())
