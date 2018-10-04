@@ -4,6 +4,7 @@ Flask-SQLAlchemy==2.1
 Flask-Bcrypt==0.7.1
 Flask-WTF==0.11
 Flask-Caching==1.4.0
+gevent==1.3.6
 
 # deployment requirements
 pip-tools==1.6.5
