@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .forms import PostTweetForm
 from project import db
+from project.async import async
 from project.models import User, Tweet, Follower
 
 # config
@@ -25,6 +26,7 @@ def login_required(test):
     return wrap
 
 
+@async
 def filtered_tweets(user_id):
     who_id = user_id
     whom_ids = db.session.query(Follower.whom_id).filter_by(who_id=who_id)

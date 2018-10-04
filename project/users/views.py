@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .forms import RegisterForm, LoginForm
 from project import db, bcrypt
+from project.async import async
 from project.models import User
 
 # config
@@ -22,6 +23,16 @@ def login_required(test):
             flash('You need to login first')
             return (redirect(url_for('users.login')))
     return wrap
+
+
+@async
+def all_users():
+    return list(db.session.query(User).all())
+
+
+@async
+def user_by_name(name):
+    return User.query.filter_by(name=name).first()
 
 
 # routes
@@ -42,7 +53,7 @@ def login():
     form = LoginForm(request.form)
     if request.method == 'POST':
         if form.validate_on_submit():
-            user = User.query.filter_by(name=request.form['name']).first()
+            user = user_by_name(name=request.form['name'])
             if (user is not None
                 and bcrypt.check_password_hash(user.password,
                                                request.form['password'])):
@@ -83,6 +94,5 @@ def register():
 
 @users_blueprint.route('/users/')
 @login_required
-def all_users():
-    users = db.session.query(User).all()
-    return render_template('users.html', users=users)
+def users():
+    return render_template('users.html', users=all_users())
