@@ -21,7 +21,7 @@ def login_required(test):
             return test(*args, **kwargs)
         else:
             flash('You need to login first')
-            return (redirect(url_for('users.login')))
+            return (redirect(url_for('users.ui_login')))
     return wrap
 
 
