@@ -33,9 +33,9 @@ def filtered_tweets(user_id):
         follower_tweets = db.session.query(Tweet)
         follower_tweets = follower_tweets.filter(Tweet.user_id.in_(whom_ids))
         result = user_tweets.union(follower_tweets)
-        return result.order_by(Tweet.posted.desc())
     else:
-        return user_tweets.order_by(Tweet.posted.desc())
+        result = user_tweets
+    return result.order_by(Tweet.posted.desc()).limit(50)
 
 
 # routes
